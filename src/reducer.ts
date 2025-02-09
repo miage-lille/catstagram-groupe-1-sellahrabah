@@ -5,7 +5,7 @@ import { Picture } from './types/picture.type';
 import fakeData from './fake-datas.json';
 import { fetchCatsCommit, fetchCatsRollback, fetchCatsRequest } from './actions';
 import { ApiStatus } from './types/api.type';
-import { failure, loading, success } from './api';
+import { failure, loading, parseResponse, success } from './api';
 
 export type State = {
   counter: number;
@@ -21,13 +21,12 @@ export const defaultState: State = {
 
 const cmdFetch = (action: FetchCatsRequest) =>
   Cmd.run(
-    () => {
-      return fetch(action.path, { method: action.method })
+    () =>
+      fetch(action.path, { method: action.method })
         .then(checkStatus)  
-        .then(response => response.json()) 
-    },
+        .then(parseResponse),
     {
-      successActionCreator: (data: { hits: Picture[] }) => fetchCatsCommit(data),
+      successActionCreator: (pictures : Picture[]) => fetchCatsCommit({hits : pictures}),
       failActionCreator: fetchCatsRollback, 
     }
   );
