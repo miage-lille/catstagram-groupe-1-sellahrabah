@@ -40,9 +40,9 @@ const Pictures = () => {
       {picturesToDisplay.map((picture, index) => (
         <Image
           key={index}
-          src={picture.previewFormat}
+          src={picture.previewURL} 
           alt={`Picture ${index + 1}`}
-          onClick={() => handleClickPicture(picture.largeFormat)} 
+          onClick={() => handleClickPicture(picture.largeImageURL)} 
         />
       ))}
       {selectedPicture && <ModalPortal largeFormat={selectedPicture} close={closeModal} />}

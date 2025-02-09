@@ -40,16 +40,16 @@ const Counter = () => {
   const pictures = useSelector(picturesSelector);
   const dispatch = useDispatch();
 
-  const maxCounter = pictures.length;
+  const maxCounter = 120;
 
   return (
     <Container>
       <Button
-        disabled={counter <= 3}
+        disabled={counter <= 3} 
         onClick={() => dispatch(decrement())}> - </Button>
       <DisplayCounter>{counter}</DisplayCounter>
       <Button
-        disabled={counter >= maxCounter}
+        disabled={counter >= maxCounter} 
         onClick={() => dispatch(increment())}> + </Button>
     </Container>
   );
