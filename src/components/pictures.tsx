@@ -25,7 +25,8 @@ const Pictures = () => {
   const counter = useSelector(counterSelector);
   const [selectedPicture, setSelectedPicture] = useState<null | string>(null); 
 
-  const picturesToDisplay = pictures.slice(0, Math.min(counter, pictures.length));
+  const picturesToDisplay = pictures.status === 'success' 
+                ? pictures.data.slice(0, Math.min(counter, pictures.data.length)) : [];
 
   const handleClickPicture = (largeFormat: string) => {
     setSelectedPicture(largeFormat); 
@@ -37,14 +38,18 @@ const Pictures = () => {
 
   return (
     <Container>
-      {picturesToDisplay.map((picture, index) => (
-        <Image
-          key={index}
-          src={picture.previewURL} 
-          alt={`Picture ${index + 1}`}
-          onClick={() => handleClickPicture(picture.largeImageURL)} 
-        />
-      ))}
+      {pictures.status === 'loading' && <p>Chargement des images...</p>}
+      
+      {pictures.status === 'failure' && <p>Erreur : {pictures.error}</p>}
+      {pictures.status === 'success' &&
+        picturesToDisplay.map((picture, index) => (
+          <Image
+            key={index}
+            src={picture.previewURL}
+            alt={`Picture ${index + 1}`}
+            onClick={() => handleClickPicture(picture.largeImageURL)}
+          />
+        ))}
       {selectedPicture && <ModalPortal largeFormat={selectedPicture} close={closeModal} />}
     </Container>
   );

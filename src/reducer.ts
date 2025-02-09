@@ -4,16 +4,18 @@ import { Actions, FetchCatsRequest } from './types/actions.type';
 import { Picture } from './types/picture.type';
 import fakeData from './fake-datas.json';
 import { fetchCatsCommit, fetchCatsRollback, fetchCatsRequest } from './actions';
+import { ApiStatus } from './types/api.type';
+import { failure, loading, success } from './api';
 
 export type State = {
   counter: number;
-  pictures: Picture[];
+  pictures: ApiStatus;
   selectedPicture: Picture | null;
 };
 
 export const defaultState: State = {
   counter: 3,
-  pictures: [],
+  pictures: success([]),
   selectedPicture: null,
 };
 
@@ -55,12 +57,15 @@ export const reducer = (state: State | undefined, action: Actions): State | Loop
     case 'CLOSE_MODAL':
         return { ...state, selectedPicture: null };
     case 'FETCH_CATS_REQUEST':
-      return state;
+      return {...state, pictures: loading()};
     case 'FETCH_CATS_COMMIT':
-      return { ...state, pictures: action.payload.hits };
+      return { ...state, pictures: success(action.payload.hits) };
     case 'FETCH_CATS_ROLLBACK':
       console.error('API Error:', action.error);
-      return state;
+      return loop(
+        { ...state, pictures: failure(action.error.message)},
+        Cmd.run(() => console.error('Logging error', action.error))
+      );
 
     default:
       return state;
