@@ -3,4 +3,7 @@ export type Picture = {
   webFormat: string;
   author: string;
   largeFormat: string;
+  previewURL: string;
+  webformatURL: string;
+  largeImageURL: string;
 };
