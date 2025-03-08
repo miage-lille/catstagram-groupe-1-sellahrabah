@@ -5,7 +5,3 @@ export const loading = (): Loading => ({status : 'loading'});
 export const success = (payload: Picture[]): Success => ({status : 'success', data : payload}); 
 export const failure = (error: string): Failure => ({ status : 'failure', error,});
 
-export const parseResponse = async (response: Response) : Promise<Picture[]> => {
-    const data = await response.json();
-    return data.hits;
-}

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styled from 'styled-components';
-import { picturesSelector, counterSelector } from '../reducer';
+import { picturesSelector, getSelectedPicture } from '../reducer';
 import ModalPortal from './modal';
+import { isSome } from 'fp-ts/lib/Option';
+import { closeModal, fetchCatsRequest, selectPicture } from '../actions';
 
 const Container = styled.div`
   padding: 1rem;
@@ -22,19 +24,12 @@ const Image = styled.img`
 
 const Pictures = () => {
   const pictures = useSelector(picturesSelector);
-  const counter = useSelector(counterSelector);
-  const [selectedPicture, setSelectedPicture] = useState<null | string>(null); 
+  const selectedPicture = useSelector(getSelectedPicture);
+  const dispatch = useDispatch(); 
 
-  const picturesToDisplay = pictures.status === 'success' 
-                ? pictures.data.slice(0, Math.min(counter, pictures.data.length)) : [];
-
-  const handleClickPicture = (largeFormat: string) => {
-    setSelectedPicture(largeFormat); 
-  };
-
-  const closeModal = () => {
-    setSelectedPicture(null); 
-  };
+  useEffect(() => {
+    dispatch(fetchCatsRequest(3));
+  }, [dispatch]);
 
   return (
     <Container>
@@ -42,15 +37,17 @@ const Pictures = () => {
       
       {pictures.status === 'failure' && <p>Erreur : {pictures.error}</p>}
       {pictures.status === 'success' &&
-        picturesToDisplay.map((picture, index) => (
+        pictures.data.map((picture, index) => (
           <Image
             key={index}
             src={picture.previewURL}
             alt={`Picture ${index + 1}`}
-            onClick={() => handleClickPicture(picture.largeImageURL)}
+            onClick={() => dispatch(selectPicture(picture))}
           />
         ))}
-      {selectedPicture && <ModalPortal largeFormat={selectedPicture} close={closeModal} />}
+      {isSome(selectedPicture) && (
+        <ModalPortal largeFormat={selectedPicture.value.largeImageURL} close={() => dispatch(closeModal())} />
+      )}
     </Container>
   );
 };

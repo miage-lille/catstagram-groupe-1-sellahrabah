@@ -2,39 +2,24 @@ import { Loop, Cmd, liftState, loop } from 'redux-loop';
 import { compose } from 'redux';
 import { Actions, FetchCatsRequest } from './types/actions.type';
 import { Picture } from './types/picture.type';
-import fakeData from './fake-datas.json';
 import { fetchCatsCommit, fetchCatsRollback, fetchCatsRequest } from './actions';
 import { ApiStatus } from './types/api.type';
-import { failure, loading, parseResponse, success } from './api';
+import { failure, loading, success } from './api';
+import { cmdFetch } from './commands';
+import { none, Option, some } from 'fp-ts/lib/Option';
 
-export type State = {
+type State = {
   counter: number;
   pictures: ApiStatus;
-  selectedPicture: Picture | null;
+  selectedPicture: Option<Picture>;
 };
 
 export const defaultState: State = {
   counter: 3,
-  pictures: success([]),
-  selectedPicture: null,
+  pictures: loading(),
+  selectedPicture: none,
 };
 
-const cmdFetch = (action: FetchCatsRequest) =>
-  Cmd.run(
-    () =>
-      fetch(action.path, { method: action.method })
-        .then(checkStatus)  
-        .then(parseResponse),
-    {
-      successActionCreator: (pictures : Picture[]) => fetchCatsCommit({hits : pictures}),
-      failActionCreator: fetchCatsRollback, 
-    }
-  );
-
-const checkStatus = (response: Response) => {
-  if (response.ok) return response;  
-  throw new Error(response.statusText);
-};
 
 export const reducer = (state: State | undefined, action: Actions): State | Loop<State> => {
   if (!state) return defaultState;
@@ -51,18 +36,25 @@ export const reducer = (state: State | undefined, action: Actions): State | Loop
         { ...state, counter: state.counter - 1 }, 
         cmdFetch(fetchCatsRequest(state.counter - 1))
       );
+
     case 'SELECT_PICTURE':
-        return { ...state, selectedPicture: action.picture};
+      return { ...state, selectedPicture: some(action.picture) };
+
     case 'CLOSE_MODAL':
-        return { ...state, selectedPicture: null };
+      return { ...state, selectedPicture: none };
+
     case 'FETCH_CATS_REQUEST':
-      return {...state, pictures: loading()};
-    case 'FETCH_CATS_COMMIT':
-      return { ...state, pictures: success(action.payload.hits) };
-    case 'FETCH_CATS_ROLLBACK':
-      console.error('API Error:', action.error);
       return loop(
-        { ...state, pictures: failure(action.error.message)},
+        { ...state, pictures: loading() }, 
+        cmdFetch(action)
+      );
+
+    case 'FETCH_CATS_COMMIT':
+      return { ...state, pictures: success(action.payload) };
+
+    case 'FETCH_CATS_ROLLBACK':
+      return loop(
+        { ...state, pictures: failure(action.error.message) },
         Cmd.run(() => console.error('Logging error', action.error))
       );
 
